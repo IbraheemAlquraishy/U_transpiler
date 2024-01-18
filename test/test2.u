@@ -1,0 +1,31 @@
+
+
+int x;
+int y;
+print "enter x:" endl;
+input x;
+print "enter y:" endl;
+input y;
+
+print "enter operation:" endl;
+
+char op;
+input op;
+
+if (op == '+'){
+    print x+y endl;
+}
+else if (op == '-'){
+    print x-y endl;
+}else if (op == '*'){
+    print x*y endl;
+}else if(op=='/'){
+    if(y==0){
+        print "err" endl;
+    }else{
+        print x/y endl;
+    }
+}
+else{
+    print "no such operation";
+}

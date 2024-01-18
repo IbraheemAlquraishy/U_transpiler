@@ -1,0 +1,6 @@
+int hey=5;
+int jasim=1;
+if (hey >= jasim) { 
+    print hey endl;
+}
+
