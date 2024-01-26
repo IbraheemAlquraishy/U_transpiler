@@ -4,17 +4,20 @@ import (
 	"fmt"
 	"testing"
 
-	token "github.com/IbraheemAlquraishy/U_transpiler/internal/modules"
+	token "github.com/IbraheemAlquraishy/U_transpiler/internal/modules/token"
 )
 
 func TestNextToken(t *testing.T) {
-	input := `if 5 ==5{
-		jasim int=0;
-		
+	input := `
+		//another comment
+		for(){
+		jasim :=0;
+		//comment
 		jasim ++;
 		jasim += 5;
 		jasim --;
 		jasim>=5;
+		print jasim;
 	}
 	
 	`
@@ -22,14 +25,13 @@ func TestNextToken(t *testing.T) {
 		expectedtype token.Tokentype
 		expectedlit  string
 	}{
-		{token.If, "if"},
-		{token.Int, "5"},
-		{token.Isequal, "=="},
-		{token.Int, "5"},
+		{token.For, "for"},
+
+		{token.LPAREN, "("},
+		{token.RPAREN, ")"},
 		{token.LBRACE, "{"},
 		{token.Ident, "jasim"},
-		{token.Intt, "int"},
-		{token.Assign, "="},
+		{token.COLONEqual, ":="},
 		{token.Int, "0"},
 		{token.SEMICOLON, ";"},
 		{token.Ident, "jasim"},
@@ -45,6 +47,9 @@ func TestNextToken(t *testing.T) {
 		{token.Ident, "jasim"},
 		{token.Greaterorequal, ">="},
 		{token.Int, "5"},
+		{token.SEMICOLON, ";"},
+		{token.Print, "print"},
+		{token.Ident, "jasim"},
 		{token.SEMICOLON, ";"},
 		{token.RBRACE, "}"},
 		{token.EOF, ""},

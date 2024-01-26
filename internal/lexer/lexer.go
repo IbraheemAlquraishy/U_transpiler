@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	token "github.com/IbraheemAlquraishy/U_transpiler/internal/modules"
+	token "github.com/IbraheemAlquraishy/U_transpiler/internal/modules/token"
 )
 
 type Lexer struct {
@@ -16,7 +16,7 @@ func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
 	l.skipwhitespace()
-
+	l.skipcomments()
 	switch l.ch {
 	case '=':
 		if l.peekchar() == '=' {
@@ -123,6 +123,15 @@ func (l *Lexer) NextToken() token.Token {
 			tok = token.Token{Type: token.Powerequal, Lit: lit}
 		} else {
 			tok = newtoken(token.Power, l.ch)
+		}
+	case ':':
+		if l.peekchar() == '=' {
+			ch := l.ch
+			l.readchar()
+			lit := string(ch) + string(l.ch)
+			tok = token.Token{Type: token.COLONEqual, Lit: lit}
+		} else {
+			tok = newtoken(token.Illegal, l.ch)
 		}
 	case 0:
 		tok.Lit = ""
@@ -240,4 +249,16 @@ func (l *Lexer) skipwhitespace() {
 
 func newtoken(tokentype token.Tokentype, ch byte) token.Token {
 	return token.Token{Type: tokentype, Lit: string(ch)}
+}
+
+func (l *Lexer) skipcomments() {
+	if l.ch == '/' {
+		l.readchar()
+		if l.ch == '/' {
+			for l.ch != '\n' {
+				l.readchar()
+			}
+			l.skipwhitespace()
+		}
+	}
 }

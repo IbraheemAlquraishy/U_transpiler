@@ -12,6 +12,8 @@ const (
 	Strt   = "string"
 	Boolt  = "bool"
 	Floatt = "float"
+
+	COLONEqual = ":="
 	//values
 	Int   = "int"
 	Str   = "string"
@@ -54,6 +56,9 @@ const (
 	If       = "if"
 	Else     = "else"
 	Return   = "return"
+	Print    = "print"
+	Input    = "input"
+	For      = "for"
 )
 
 type Token struct {
@@ -72,6 +77,9 @@ var keywords = map[string]Tokentype{
 	"if":     If,
 	"else":   Else,
 	"return": Return,
+	"print":  Print,
+	"input":  Input,
+	"for":    For,
 }
 
 func Lookupident(ident string) Tokentype {
