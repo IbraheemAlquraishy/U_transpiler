@@ -1,22 +1,20 @@
 package ast
 
-import "github.com/IbraheemAlquraishy/U_transpiler/internal/modules/token"
+import (
+	"bytes"
+
+	"github.com/IbraheemAlquraishy/U_transpiler/internal/modules/token"
+)
 
 type Node interface {
 	Tokenliteral() string
+	String() string
 }
-
-type StatmentType string
-
-const (
-	DeclareStatment = "declare"
-	AssignStatment  = "assign"
-)
 
 type Statement interface {
 	Node
 	statementnode()
-
+	Tokenliteral() string
 	Tokentype() token.Tokentype
 }
 
@@ -37,35 +35,13 @@ func (p *Program) Tokenliteral() string {
 	}
 }
 
-type Declarestatment struct {
-	Stattype StatmentType
-	Name     *Identity
-
-	Value Expression
+func (p *Program) String() string {
+	var out bytes.Buffer
+	for _, s := range p.Statements {
+		out.WriteString(s.String())
+	}
+	return out.String()
 }
-
-func (ds *Declarestatment) statementnode() {}
-
-func (ds *Declarestatment) Tokenliteral() string {
-	return ds.Name.Tokenliteral()
-}
-func (ds *Declarestatment) Tokentype() token.Tokentype {
-	return ds.Name.Tokentype()
-}
-
-func (ds *Declarestatment) New(i *Identity) {
-	ds.Stattype = DeclareStatment
-	ds.Name = i
-}
-
-type Retrunstatment struct {
-	Token       token.Token
-	ReturnValue Expression
-}
-
-func (rs *Retrunstatment) statementnode()             {}
-func (rs *Retrunstatment) Tokenliteral() string       { return rs.Token.Lit }
-func (rs *Retrunstatment) Tokentype() token.Tokentype { return rs.Token.Type }
 
 type Identity struct {
 	Token token.Token
@@ -82,3 +58,41 @@ func (i *Identity) Tokenliteral() string {
 func (i *Identity) Tokentype() token.Tokentype {
 	return i.Type
 }
+func (i *Identity) String() string {
+	switch i.Type {
+	case token.Intt:
+		return i.Value + " int"
+	case token.Floatt:
+		return i.Value + " float"
+	case token.Boolt:
+		return i.Value + " bool"
+	case token.Strt:
+		return i.Value + " string"
+	default:
+		return i.Value
+	}
+}
+
+type IntegerLit struct {
+	Token token.Token
+	Value int
+}
+
+func (il *IntegerLit) expressionnode()            {}
+func (il *IntegerLit) Tokenliteral() string       { return il.Token.Lit }
+func (il *IntegerLit) Tokentype() token.Tokentype { return il.Token.Type }
+func (il *IntegerLit) String() string {
+	return il.Token.Lit
+}
+
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (b *Boolean) expressionnode()            {}
+func (b *Boolean) Tokenliteral() string       { return b.Token.Lit }
+func (b *Boolean) Tokentype() token.Tokentype { return b.Token.Type }
+func (b *Boolean) String() string             { return b.Token.Lit }
+
+//TODO stringlit struct and its parser

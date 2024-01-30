@@ -228,7 +228,11 @@ func isletter(ch byte) bool {
 func (l *Lexer) isfloat() bool {
 	pos := l.pos
 	for isDigit(l.input[pos]) {
-		pos += 1
+		if pos < len(l.input)-1 {
+			pos += 1
+		} else {
+			break
+		}
 	}
 	if l.input[pos] == '.' {
 		return true
@@ -253,8 +257,8 @@ func newtoken(tokentype token.Tokentype, ch byte) token.Token {
 
 func (l *Lexer) skipcomments() {
 	if l.ch == '/' {
-		l.readchar()
-		if l.ch == '/' {
+
+		if l.peekchar() == '/' {
 			for l.ch != '\n' {
 				l.readchar()
 			}

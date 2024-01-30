@@ -11,13 +11,14 @@ func TestNextToken(t *testing.T) {
 	input := `
 		//another comment
 		for(){
-		jasim :=0;
+		jasim :=-1;
 		//comment
 		jasim ++;
 		jasim += 5;
 		jasim --;
 		jasim>=5;
 		print jasim;
+		abbas bool=true;
 	}
 	
 	`
@@ -32,7 +33,8 @@ func TestNextToken(t *testing.T) {
 		{token.LBRACE, "{"},
 		{token.Ident, "jasim"},
 		{token.COLONEqual, ":="},
-		{token.Int, "0"},
+		{token.Sub, "-"},
+		{token.Int, "1"},
 		{token.SEMICOLON, ";"},
 		{token.Ident, "jasim"},
 		{token.Inc, "++"},
@@ -50,6 +52,11 @@ func TestNextToken(t *testing.T) {
 		{token.SEMICOLON, ";"},
 		{token.Print, "print"},
 		{token.Ident, "jasim"},
+		{token.SEMICOLON, ";"},
+		{token.Ident, "abbas"},
+		{token.Boolt, "bool"},
+		{token.Assign, "="},
+		{token.TRUE, "true"},
 		{token.SEMICOLON, ";"},
 		{token.RBRACE, "}"},
 		{token.EOF, ""},

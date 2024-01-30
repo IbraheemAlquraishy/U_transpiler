@@ -8,11 +8,12 @@ const (
 
 	Ident = "ident"
 	//ident type consider a keyword
-	Intt   = "int"
-	Strt   = "string"
-	Boolt  = "bool"
-	Floatt = "float"
-
+	Intt       = "int"
+	Strt       = "string"
+	Boolt      = "bool"
+	Floatt     = "float"
+	Voidt      = "void"
+	UNdefined  = "undefined"
 	COLONEqual = ":="
 	//values
 	Int   = "int"
@@ -57,6 +58,7 @@ const (
 	Else     = "else"
 	Return   = "return"
 	Print    = "print"
+	Println  = "println"
 	Input    = "input"
 	For      = "for"
 )
@@ -67,19 +69,20 @@ type Token struct {
 }
 
 var keywords = map[string]Tokentype{
-	"func":   FUNCTION,
-	"int":    Intt,
-	"string": Strt,
-	"bool":   Boolt,
-	"float":  Floatt,
-	"true":   TRUE,
-	"false":  False,
-	"if":     If,
-	"else":   Else,
-	"return": Return,
-	"print":  Print,
-	"input":  Input,
-	"for":    For,
+	"func":    FUNCTION,
+	"int":     Intt,
+	"string":  Strt,
+	"bool":    Boolt,
+	"float":   Floatt,
+	"true":    TRUE,
+	"false":   False,
+	"if":      If,
+	"else":    Else,
+	"return":  Return,
+	"print":   Print,
+	"input":   Input,
+	"for":     For,
+	"println": Println,
 }
 
 func Lookupident(ident string) Tokentype {
