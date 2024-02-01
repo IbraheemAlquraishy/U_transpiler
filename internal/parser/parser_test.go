@@ -11,7 +11,10 @@ import (
 
 func TestDeclareStatments(t *testing.T) {
 	input := `
-	input x;
+	func jasim()int{
+
+	}
+	x int=jasim();
 	`
 
 	l := lexer.New(input)

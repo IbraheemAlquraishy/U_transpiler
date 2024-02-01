@@ -1,0 +1,1 @@
+x int=5;y string=jasim;iftrue {println y; }

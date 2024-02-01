@@ -1,0 +1,8 @@
+//comment
+
+
+func jasim()int{
+    return 5;
+}
+
+x string=jasim();

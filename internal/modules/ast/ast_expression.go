@@ -15,6 +15,9 @@ type PrefixExpression struct {
 
 func (pe *PrefixExpression) expressionnode()      {}
 func (pe *PrefixExpression) Tokenliteral() string { return pe.Token.Lit }
+func (pe *PrefixExpression) Tokentype() token.Tokentype {
+	return pe.Token.Type
+}
 func (pe *PrefixExpression) String() string {
 	var out bytes.Buffer
 	out.WriteString("(")

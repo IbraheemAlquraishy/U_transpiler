@@ -21,6 +21,7 @@ type Statement interface {
 type Expression interface {
 	Node
 	expressionnode()
+	Tokentype() token.Tokentype
 }
 
 type Program struct {
@@ -96,3 +97,27 @@ func (b *Boolean) Tokentype() token.Tokentype { return b.Token.Type }
 func (b *Boolean) String() string             { return b.Token.Lit }
 
 //TODO stringlit struct and its parser
+
+type Stringlit struct {
+	Token token.Token
+	Value string
+}
+
+func (s *Stringlit) expressionnode()            {}
+func (s *Stringlit) Tokenliteral() string       { return s.Token.Lit }
+func (s *Stringlit) Tokentype() token.Tokentype { return s.Token.Type }
+func (s *Stringlit) String() string {
+	return s.Value
+}
+
+type Floatlit struct {
+	Token token.Token
+	Value float64
+}
+
+func (f *Floatlit) expressionnode()            {}
+func (f *Floatlit) Tokenliteral() string       { return f.Token.Lit }
+func (f *Floatlit) Tokentype() token.Tokentype { return f.Token.Type }
+func (f *Floatlit) String() string {
+	return f.Token.Lit
+}

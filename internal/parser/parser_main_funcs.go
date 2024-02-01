@@ -53,6 +53,7 @@ func (p *Parser) parsedeclarestatment() *ast.Declarestatment {
 	} else {
 		it = &ast.Identity{Token: p.curtoken, Value: p.curtoken.Lit, Type: p.peektoken.Type}
 		p.nextToken()
+		p.nextToken()
 	}
 
 	var stmt ast.Declarestatment
@@ -73,6 +74,8 @@ func (p *Parser) parsedeclarestatment() *ast.Declarestatment {
 			} else {
 				stmt.Value = p.parseExpression(LOWEST)
 			}
+		} else if p.CurtokenIs(token.If) || p.CurtokenIs(token.For) || p.CurtokenIs(token.FUNCTION) || p.CurtokenIs(token.Print) || p.CurtokenIs(token.Println) || p.CurtokenIs(token.Input) {
+			p.Peekerror("expected ;")
 		}
 		p.nextToken()
 	}
@@ -257,7 +260,7 @@ func (p *Parser) parseCallexpression(i *ast.Identity, f ast.Functionstatment) as
 
 func (p *Parser) parsecallargs() []ast.Expression {
 	args := []ast.Expression{}
-
+	p.nextToken()
 	if p.PeekTokenIs(token.RPAREN) {
 		p.nextToken()
 		return args

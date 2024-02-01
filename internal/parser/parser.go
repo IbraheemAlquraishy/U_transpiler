@@ -69,6 +69,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixparsefns = make(map[token.Tokentype]prefixParsefunc)
 	p.registerPrefix(token.Ident, p.parseIdentity)
 	p.registerPrefix(token.Int, p.parseIntlit)
+	p.registerPrefix(token.Str, p.parseStringlit)
+	p.registerPrefix(token.Float, p.parseFloatlit)
 	p.registerPrefix(token.Sub, p.parseprefixexpression)
 	p.registerPrefix(token.Not, p.parseprefixexpression)
 	p.registerPrefix(token.TRUE, p.parseBoolean)
@@ -141,7 +143,7 @@ func (p *Parser) expectedpeek(t token.Tokentype) bool {
 }
 
 func (p *Parser) parseIdentity() ast.Expression {
-	return &ast.Identity{Token: p.curtoken, Value: p.curtoken.Lit}
+	return &ast.Identity{Token: p.curtoken, Value: p.curtoken.Lit, Type: token.UNdefined}
 }
 
 func (p *Parser) parseIntlit() ast.Expression {
@@ -153,6 +155,22 @@ func (p *Parser) parseIntlit() ast.Expression {
 		return nil
 	}
 	lit.Value = int(value)
+	return lit
+}
+
+func (p *Parser) parseStringlit() ast.Expression {
+	lit := &ast.Stringlit{Token: p.curtoken, Value: p.curtoken.Lit}
+	return lit
+}
+
+func (p *Parser) parseFloatlit() ast.Expression {
+	lit := &ast.Floatlit{Token: p.curtoken}
+	v, err := strconv.ParseFloat(p.curtoken.Lit, 64)
+	if err != nil {
+		p.Peekerror("cant convert to float 64")
+		return nil
+	}
+	lit.Value = v
 	return lit
 }
 
