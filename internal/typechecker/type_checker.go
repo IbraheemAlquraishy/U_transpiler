@@ -8,67 +8,138 @@ import (
 	"github.com/IbraheemAlquraishy/U_transpiler/internal/modules/ast"
 	"github.com/IbraheemAlquraishy/U_transpiler/internal/modules/funcmap"
 	"github.com/IbraheemAlquraishy/U_transpiler/internal/modules/token"
-	"github.com/IbraheemAlquraishy/U_transpiler/internal/parser"
 )
 
 type Checker struct {
-	Program *ast.Program
-	Errs    []error
-	Ids     map[string]ast.Identity
-	Funcs   funcmap.Fns
+	Program        *ast.Program
+	checkedprogram *ast.Program
+	Errs           []error
+	Ids            map[string]ast.Identity
+	Funcs          funcmap.Fns
 }
 
-func New(p *parser.Parser) Checker {
+func New(program *ast.Program, e []string) Checker {
 	var c Checker
-	c.Program = p.ParseProgram()
-	e := p.Errors()
+	c.Program = program
+
 	if len(e) != 0 {
 		log.Fatalln(e)
 
 	}
 	c.Ids = make(map[string]ast.Identity)
 	c.Funcs.New()
+	c.checkedprogram = &ast.Program{}
 
 	return c
 }
 
-func (c *Checker) Returnprogram() *ast.Program {
-	return c.Program
+func Newf(program *ast.Program, e []string, f funcmap.Fns) Checker {
+	var c Checker
+	c.Program = program
+
+	if len(e) != 0 {
+		log.Fatalln(e)
+
+	}
+	c.Ids = make(map[string]ast.Identity)
+	c.Funcs = f
+	c.checkedprogram = &ast.Program{}
+	return c
+}
+
+func (c *Checker) ReturnCheckedprogram() *ast.Program {
+	return c.checkedprogram
 }
 
 func (c *Checker) Printprogram() {
-	for _, i := range c.Program.Statements {
+	for _, i := range c.checkedprogram.Statements {
 		fmt.Println(i.String())
 	}
 
 }
 
-func (c *Checker) Info() {
+func (c *Checker) Checkall() {
 	fmt.Println(len(c.Program.Statements))
 	for _, i := range c.Program.Statements {
 		c.EvalStatment(i)
+		c.checkedprogram.Statements = append(c.checkedprogram.Statements, i)
+	}
+}
+
+func (c *Checker) Checkfuncs() {
+	for _, i := range c.Program.Statements {
+		if _, ok := i.(*ast.Functionstatment); ok {
+			c.EvalStatment(i)
+			c.checkedprogram.Statements = append(c.checkedprogram.Statements, i)
+			c.Ids = make(map[string]ast.Identity)
+		}
+
+	}
+}
+
+func (c *Checker) CheckRest() {
+	for _, i := range c.Program.Statements {
+		if _, ok := i.(*ast.Functionstatment); !ok {
+			c.EvalStatment(i)
+			c.checkedprogram.Statements = append(c.checkedprogram.Statements, i)
+		}
+
 	}
 }
 
 func (c *Checker) EvalExpression(e ast.Expression) string {
 	var t string
 
-	if _, ok := e.(*ast.PrefixExpression); ok {
+	if i, ok := e.(*ast.PrefixExpression); ok {
 		t = "prefix"
-	} else if _, ok := e.(*ast.InfixExpression); ok {
+		t = c.evalPrefix(i)
+	} else if i, ok := e.(*ast.InfixExpression); ok {
 		t = "infix"
-
-	} else if _, ok := e.(*ast.IncExpression); ok {
+		t = c.evalInfix(i)
+	} else if i, ok := e.(*ast.IncExpression); ok {
 		t = "inc"
-	} else if _, ok := e.(*ast.IfExpression); ok {
+		t = c.EvalExpression(i.Left)
+		switch t {
+		case "int":
+		case "ident":
+		default:
+			e := errors.New("not a valid inc expression")
+			c.Errs = append(c.Errs, e)
+			c.ThrowErrs()
+		}
+	} else if i, ok := e.(*ast.IfExpression); ok {
 		t = "if"
-	} else if _, ok := e.(*ast.ForExpression); ok {
+		tr := c.EvalExpression(i.Condition)
+		if tr != "bool" {
+			err := errors.New("not a valid if condition ")
+			c.Errs = append(c.Errs, err)
+			c.ThrowErrs()
+		}
+		c.EvalStatment(i.Consequence)
+		if i.Alternative != nil {
+			c.EvalStatment(i.Alternative)
+		}
+	} else if i, ok := e.(*ast.ForExpression); ok {
 		t = "for"
+		if i.Var != nil {
+			c.EvalStatment(i.Var)
+		}
+
+		if c.EvalExpression(i.Condition) != "bool" {
+			err := errors.New("not a valid for condition ")
+			c.Errs = append(c.Errs, err)
+			c.ThrowErrs()
+		}
+		c.EvalExpression(i.Relation)
+		c.EvalStatment(i.Body)
 	} else if i, ok := e.(*ast.CallExpression); ok {
 		t = "call"
 		t = string(i.Function.Name.Type)
-	} else if _, ok := e.(*ast.Identity); ok {
+	} else if i, ok := e.(*ast.Identity); ok {
 		t = "ident"
+		if c.lookupid(i.Value, i.Type) == 1 {
+			t = string(c.getidtype(i.Value))
+		}
 	} else if _, ok := e.(*ast.IntegerLit); ok {
 		t = "int"
 	} else if _, ok := e.(*ast.Boolean); ok {
@@ -81,6 +152,7 @@ func (c *Checker) EvalExpression(e ast.Expression) string {
 
 		e := errors.New("not a valid expression")
 		c.Errs = append(c.Errs, e)
+		c.ThrowErrs()
 	}
 	if t == "" {
 		c.ThrowErrs()
@@ -93,45 +165,50 @@ func (c *Checker) ThrowErrs() {
 	log.Fatal(c.Errs)
 }
 
-func (c *Checker) EvalStatment(s ast.Statement) {
+func (c *Checker) EvalStatment(s ast.Statement) string {
 	var t string
-	i := s
+
 	if i, ok := s.(*ast.Declarestatment); ok {
 		t = "declare"
-		tr := c.EvalExpression(i.Value)
-		var typ token.Tokentype
-		switch tr {
-		case "int":
-			typ = token.Intt
+		if i.Value != nil {
+			tr := c.EvalExpression(i.Value)
+			var typ token.Tokentype
+			switch tr {
+			case "int":
+				typ = token.Intt
 
-		case "string":
-			typ = token.Strt
+			case "string":
+				typ = token.Strt
 
-		case "bool":
-			typ = token.Boolt
+			case "bool":
+				typ = token.Boolt
 
-		case "float":
-			typ = token.Floatt
+			case "float":
+				typ = token.Floatt
 
-		}
-		if i.Name.Type == token.UNdefined {
-			i.Name.Type = typ
-			c.registerId(*i.Name)
-		} else if i.Name.Type == typ {
-			c.registerId(*i.Name)
+			}
+
+			if i.Name.Type == token.UNdefined {
+				i.Name.Type = typ
+				c.registerId(*i.Name)
+			} else if i.Name.Type == typ {
+				c.registerId(*i.Name)
+			} else {
+				e := errors.New("this function returns diffrent datatype")
+				c.Errs = append(c.Errs, e)
+				c.ThrowErrs()
+			}
 		} else {
-			e := errors.New("this function returns diffrent datatype")
-			c.Errs = append(c.Errs, e)
-			c.ThrowErrs()
+			c.registerId(*i.Name)
 		}
-
-	} else if i, ok := s.(*ast.Retrunstatment); ok {
+	} else if _, ok := s.(*ast.Retrunstatment); ok {
 		t = "return"
-		c.EvalExpression(i.ReturnValue)
+
 	} else if i, ok := s.(*ast.BlockStatement); ok {
 		t = "block"
 		for _, j := range i.Statements {
 			c.EvalStatment(j)
+
 		}
 	} else if i, ok := s.(*ast.Functionstatment); ok {
 		t = "function"
@@ -140,13 +217,15 @@ func (c *Checker) EvalStatment(s ast.Statement) {
 			c.Errs = append(c.Errs, e)
 			c.ThrowErrs()
 		}
-		c.EvalStatment(i.Body)
+		for _, j := range i.Param {
+			c.registerId(*j)
+		}
+		c.validfuncbody(i.Body, i.Name.Type)
 		c.Funcs.Add(i.Name.Value, i.Name.Type, i)
+
 	} else if i, ok := s.(*ast.ExpressionStatement); ok {
 		t = "expression"
-		if j, ok := i.Expression.(*ast.InfixExpression); ok {
-			c.evalInfix(j)
-		}
+		c.EvalExpression(i.Expression)
 
 	} else if i, ok := s.(*ast.PrintStatment); ok {
 		t = "print"
@@ -157,9 +236,8 @@ func (c *Checker) EvalStatment(s ast.Statement) {
 	}
 	if t == "" {
 		c.ThrowErrs()
-	} else {
-		fmt.Print(t + "\t" + i.String())
 	}
+	return t
 }
 
 func (c *Checker) registerId(i ast.Identity) {
@@ -248,6 +326,8 @@ func (c *Checker) evalInfix(in *ast.InfixExpression) string {
 				c.ThrowErrs()
 			}
 		}
+	} else if in.Operator == "<" || in.Operator == "<=" || in.Operator == ">" || in.Operator == ">=" || in.Operator == "==" || in.Operator == "!=" {
+		tr = "bool"
 	} else if tr != tl {
 		err := errors.New("not a valid infix expression")
 		c.Errs = append(c.Errs, err)
@@ -258,4 +338,44 @@ func (c *Checker) evalInfix(in *ast.InfixExpression) string {
 		c.ThrowErrs()
 	}
 	return tr
+}
+
+func (c *Checker) evalPrefix(pr *ast.PrefixExpression) string {
+	t := c.EvalExpression(pr.Right)
+	if t == "infix" {
+		i, _ := pr.Right.(*ast.InfixExpression)
+		for t == "infix" {
+			t = c.evalInfix(i)
+		}
+
+	}
+	switch t {
+	case "int":
+
+	case "string":
+
+	case "bool":
+
+	case "float":
+
+	default:
+		err := errors.New("not a valid prefix expression ")
+		c.Errs = append(c.Errs, err)
+		c.ThrowErrs()
+	}
+	return t
+}
+
+func (c *Checker) validfuncbody(b *ast.BlockStatement, rt token.Tokentype) {
+	for _, j := range b.Statements {
+		tr := c.EvalStatment(j)
+		if tr == "return" {
+			i, _ := j.(*ast.Retrunstatment)
+			if c.EvalExpression(i.ReturnValue) != string(rt) {
+				err := errors.New("not a valid return for the function ")
+				c.Errs = append(c.Errs, err)
+				c.ThrowErrs()
+			}
+		}
+	}
 }

@@ -143,7 +143,20 @@ func (p *Parser) expectedpeek(t token.Tokentype) bool {
 }
 
 func (p *Parser) parseIdentity() ast.Expression {
-	return &ast.Identity{Token: p.curtoken, Value: p.curtoken.Lit, Type: token.UNdefined}
+	ex := &ast.Identity{Token: p.curtoken, Value: p.curtoken.Lit, Type: token.UNdefined}
+
+	if p.PeekTokenIs(token.LPAREN) {
+
+		f, e := p.lookupfuncs(*ex)
+		if e != "" {
+			msg := fmt.Sprintf("can not parse %q as int", p.curtoken.Lit)
+			p.Peekerror(msg)
+			return nil
+		}
+		return p.parseCallexpression(ex, f)
+	} else {
+		return ex
+	}
 }
 
 func (p *Parser) parseIntlit() ast.Expression {
@@ -222,4 +235,30 @@ func (p *Parser) lookupfuncs(i ast.Identity) (ast.Functionstatment, string) {
 
 func (p *Parser) savefunc(i ast.Identity, fn ast.Functionstatment) {
 	p.funcs[i.Value] = fn
+}
+
+func (p *Parser) checkifInfixnotcall() bool {
+	pos := p.l.Pos
+	for p.l.Input[pos] != ';' {
+		switch p.l.Input[pos] {
+		case '+':
+			return true
+		case '-':
+			return true
+		case '*':
+			return true
+		case '/':
+			return true
+		case '^':
+			return true
+		case '<':
+			return true
+		case '=':
+			return true
+
+		default:
+			pos++
+		}
+	}
+	return false
 }

@@ -16,7 +16,8 @@ func TestCheckernew(t *testing.T) {
 	}
 	l := lexer.New(string(file))
 	p := parser.New(l)
-	c := New(p)
-	c.Info()
+	program := p.ParseProgram()
+	c := New(program, p.Errors())
+	c.Checkall()
 
 }

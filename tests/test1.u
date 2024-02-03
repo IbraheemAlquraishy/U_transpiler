@@ -1,8 +1,27 @@
 //comment
 
 
-func jasim()int{
-    return 5;
+x int;
+y int;
+z string;
+println "enter 1st number";
+input x;
+println "enter 2nd number";
+input y;
+println "enter operator ";
+input z;
+if (z=="*"){
+    println x*y;
+}
+if (z=="+"){
+    println x+y;
 }
 
-x string=jasim();
+if (z=="-"){
+    println x-y;
+}
+
+if (z=="/"){
+    println x/y;
+}
+

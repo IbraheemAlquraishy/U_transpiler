@@ -70,7 +70,11 @@ func (p *Parser) parsedeclarestatment() *ast.Declarestatment {
 					p.Peekerror("no such function")
 					return nil
 				}
-				stmt.Value = p.parseCallexpression(t, f)
+				if p.checkifInfixnotcall() {
+					stmt.Value = p.parseInfixcall(t, f)
+				} else {
+					stmt.Value = p.parseCallexpression(t, f)
+				}
 			} else {
 				stmt.Value = p.parseExpression(LOWEST)
 			}
@@ -267,7 +271,7 @@ func (p *Parser) parsecallargs() []ast.Expression {
 	}
 
 	p.nextToken()
-	p.nextToken()
+
 	args = append(args, p.parseExpression(LOWEST))
 
 	for p.PeekTokenIs(token.COMMA) {
@@ -308,4 +312,13 @@ func (p *Parser) parsePrintStatment() *ast.PrintStatment {
 	ps.Data = p.parseExpression(LOWEST)
 	p.nextToken()
 	return ps
+}
+
+func (p *Parser) parseInfixcall(t *ast.Identity, f ast.Functionstatment) ast.Expression {
+	ex := &ast.InfixExpression{Left: p.parseCallexpression(t, f), Operator: p.peektoken.Lit}
+	p.nextToken()
+	precedence := p.curPrecedence()
+	p.nextToken()
+	ex.Right = p.parseExpression(precedence)
+	return ex
 }

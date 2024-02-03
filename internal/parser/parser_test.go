@@ -11,10 +11,9 @@ import (
 
 func TestDeclareStatments(t *testing.T) {
 	input := `
-	func jasim()int{
+	for i int=0;i<5;i++{
 
 	}
-	x int=jasim();
 	`
 
 	l := lexer.New(input)
