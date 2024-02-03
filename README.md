@@ -56,6 +56,6 @@ string
 bool
 float
 ## roadmap
-[]args for the transpiler
-[]the use of goroutins to get things faster
-[]arrays and len keyword
+- [ ]  args for the transpiler
+- [ ] the use of goroutins to get things faster
+- [ ] arrays and len keyword
