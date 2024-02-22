@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/IbraheemAlquraishy/U_transpiler/internal/coder"
@@ -11,12 +12,29 @@ import (
 
 func main() {
 	t := time.Now()
-	file, err := os.ReadFile("./tests/test1.u")
+	leng := len(os.Args)
+
+	if leng < 2 {
+		log.Fatal("no file to transpiler")
+	}
+	p := os.Args[1]
+
+	file, err := os.ReadFile(p)
 	if err != nil {
 		log.Fatal(err)
 	}
 	code := coder.Code(string(file))
-	f, e := os.Create("./tests/test1.cpp")
+	o := strings.Split(p, ".u")[0]
+	o += ".cpp"
+	if leng > 2 {
+		if os.Args[2] == "-o" {
+			if leng != 4 {
+				log.Fatal("no output file")
+			}
+			o = os.Args[3]
+		}
+	}
+	f, e := os.Create(o)
 	if e != nil {
 		log.Fatal(e)
 	}
