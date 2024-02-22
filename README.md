@@ -56,6 +56,15 @@ string
 bool
 float
 ## roadmap
-- [ ]  args for the transpiler
+- [x]  args for the transpiler
 - [ ] the use of goroutins to get things faster
 - [ ] arrays and len keyword
+## usage
+to transpiler u code 
+```
+u FILENAME
+```
+to transpiler u code with output file name
+```
+u FILENAME -o OUTPUTFILENAME
+```
